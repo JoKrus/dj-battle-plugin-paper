@@ -1,0 +1,6 @@
+name: PaperDjBattle
+version: '${version}'
+main: net.jcom.minecraft.paperdjbattle.PaperDjBattlePlugin
+api-version: '1.21'
+libraries:
+  - com.j256.ormlite:ormlite-jdbc:6.1
