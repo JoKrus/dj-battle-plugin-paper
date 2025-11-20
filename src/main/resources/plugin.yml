@@ -4,3 +4,97 @@ main: net.jcom.minecraft.paperdjbattle.PaperDjBattlePlugin
 api-version: '1.21'
 libraries:
   - com.j256.ormlite:ormlite-jdbc:6.1
+
+commands:
+  djbattle:
+    usage: /<command> [start 'name' 'category' | stop | init | reload]
+    aliases: [ ]
+    description: Manages the battle (Start, Stop, Init etc.)
+    permission: battle-plugin.battle
+
+  djteam:
+    usage: /<command> [join 'teamName' | leave | list | test | remove 'teamName']
+    aliases: [ ]
+    description: Used for team creation, joining a team and leaving a team
+    permission: battle-plugin.team
+
+  djspec:
+    usage: /<command> 'playerName'
+    aliases: [ djspectate ]
+    description: Used to navigate spectating during a battle
+    permission: battle-plugin.spectate
+
+
+permissions:
+  battle-plugin.*:
+    default: op
+    description: OP-Permission for everything
+    children:
+      battle-plugin.battle.*: true
+
+  battle-plugin.battle:
+    default: op
+    description: Base for Battle-Management | Permission
+
+  battle-plugin.battle.*:
+    default: op
+    description: Battle-Management | Permission
+    children:
+      start: true
+      stop: true
+      reload: true
+      init: true
+
+  battle-plugin.battle.start:
+    default: op
+    description: Permission to start the battle | Permission
+
+  battle-plugin.battle.stop:
+    default: op
+    description: Permission to stop the battle | Permission
+
+  battle-plugin.battle.reload:
+    default: op
+    description: Permission to reload the config | Permission
+
+  battle-plugin.battle.init:
+    default: op
+    description: Permission to initialize a battle world from config | Permission
+
+  battle-plugin.team:
+    default: true
+    description: Base for Battle-Team-Management | Permission
+
+  battle-plugin.team.*:
+    default: true
+    description: Battle-Team-Management | Permission
+    children:
+      join: true
+      leave: true
+      list: true
+      test: false
+      remove: false
+
+  battle-plugin.team.join:
+    default: true
+    description: Permission to join a team | Permission
+
+  battle-plugin.team.leave:
+    default: true
+    description: Permission to leave a team | Permission
+
+  battle-plugin.team.list:
+    default: true
+    description: Permission to list all teams | Permission
+
+  battle-plugin.team.test:
+    default: op
+    description: Permission to test if every online player is in a team | Permission
+
+  battle-plugin.team.remove:
+    default: op
+    description: Permission to remove a whole team | Permission
+
+  battle-plugin.spectate:
+    default: true
+    description: Base for Battle-Spectate-Management | Permission

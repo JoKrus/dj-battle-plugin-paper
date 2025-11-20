@@ -57,7 +57,8 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             commands.registrar().register(BattleCommand.createCommand("djbattle"), "Manages the battle (Start, Stop, Init etc.)", List.of());
-            commands.registrar().register(TeamCommand.createCommand("djteam", teamService, playerService), "Manages the battle (Start, Stop, Init etc.)", List.of());
+            commands.registrar().register(TeamCommand.createCommand("djteam", teamService, playerService), "Used for team creation, joining a team and leaving a team", List.of());
+            commands.registrar().register(TeamCommand.createCommand("djspectate", teamService, playerService), "Used to navigate spectating during a battle", List.of("djspec"));
         });
     }
 
