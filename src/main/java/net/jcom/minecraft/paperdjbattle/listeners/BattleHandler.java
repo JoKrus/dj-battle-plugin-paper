@@ -58,6 +58,8 @@ public class BattleHandler implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, SoundCategory.PLAYERS, 1.f,
                     0.f);
         }
+
+        //todo check if whole team is eliminated etc
     }
 
     @EventHandler
