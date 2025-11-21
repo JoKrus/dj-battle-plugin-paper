@@ -9,7 +9,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import it.unimi.dsi.fastutil.Pair;
-import net.jcom.minecraft.paperdjbattle.config.BattleState;
+import net.jcom.minecraft.paperdjbattle.config.BattleStateManager;
 import net.jcom.minecraft.paperdjbattle.database.entities.DjPlayer;
 import net.jcom.minecraft.paperdjbattle.database.entities.Team;
 import net.jcom.minecraft.paperdjbattle.database.services.PlayerService;
@@ -75,7 +75,7 @@ public class TeamCommand {
         var sender = context.getSource().getSender();
         var teamName = context.getArgument("teamName", String.class);
 
-        if (BattleState.get().isGoingOn()) {
+        if (BattleStateManager.get().isGoingOn()) {
             var component = text("You can't remove a team during a battle.", NamedTextColor.RED);
             sender.sendMessage(component);
             return 0;
@@ -161,7 +161,9 @@ public class TeamCommand {
             for (var player : team.getTeamMembers()) {
                 sb.append(" ").append(player.getName()).append(",");
             }
-            sb.replace(sb.length() - 1, sb.length(), "\n");
+            if (!sb.isEmpty()) {
+                sb.replace(sb.length() - 1, sb.length(), "\n");
+            }
             comp.append(text(sb.toString(), WHITE));
         }
         sender.sendMessage(comp);
@@ -177,7 +179,7 @@ public class TeamCommand {
             return 0;
         }
 
-        if (BattleState.get().isGoingOn()) {
+        if (BattleStateManager.get().isGoingOn()) {
             var component = text("You can't leave a team during a battle.", NamedTextColor.RED);
             sender.sendMessage(component);
             return 0;
@@ -238,7 +240,7 @@ public class TeamCommand {
             return 0;
         }
 
-        if (BattleState.get().isGoingOn()) {
+        if (BattleStateManager.get().isGoingOn()) {
             var component = text("You can't join a team during a battle.", NamedTextColor.RED);
             sender.sendMessage(component);
             return 0;

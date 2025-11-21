@@ -3,20 +3,26 @@ package net.jcom.minecraft.paperdjbattle;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.jcom.minecraft.paperdjbattle.commands.BattleCommand;
 import net.jcom.minecraft.paperdjbattle.commands.TeamCommand;
-import net.jcom.minecraft.paperdjbattle.config.BattleState;
+import net.jcom.minecraft.paperdjbattle.config.BattleStateManager;
 import net.jcom.minecraft.paperdjbattle.config.Defaults;
 import net.jcom.minecraft.paperdjbattle.config.DefaultsManager;
 import net.jcom.minecraft.paperdjbattle.database.impl.SqliteDatabase;
 import net.jcom.minecraft.paperdjbattle.database.services.PlayerService;
 import net.jcom.minecraft.paperdjbattle.database.services.TeamService;
-import net.jcom.minecraft.paperdjbattle.listeners.JoinListener;
+import net.jcom.minecraft.paperdjbattle.listeners.DbJoinListener;
+import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Properties;
 
 public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
+    private static PaperDjBattlePlugin plugin;
 
     private SqliteDatabase database;
     private PlayerService playerService;
@@ -25,10 +31,11 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         // Plugin startup logic
-
+        plugin = this;
         this.getLogger().info("[PaperDjBattle] Plugin has been enabled!");
 
-        BattleState.get().init(this);
+        DefaultsManager.init(this, Defaults.class);
+        BattleStateManager.get().init(this);
 
         try {
             if (!getDataFolder().exists()) {
@@ -48,23 +55,46 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
             return;
         }
 
-
-        //this.getServer().getPluginManager().registerEvents(this, this);
-        this.getServer().getPluginManager().registerEvents(new JoinListener(playerService), this);
-
-        DefaultsManager.init(this, Defaults.class);
-
-
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            commands.registrar().register(BattleCommand.createCommand("djbattle"), "Manages the battle (Start, Stop, Init etc.)", List.of());
+            commands.registrar().register(BattleCommand.createCommand("djbattle", teamService, playerService), "Manages the battle (Start, Stop, Init etc.)", List.of());
             commands.registrar().register(TeamCommand.createCommand("djteam", teamService, playerService), "Used for team creation, joining a team and leaving a team", List.of());
             commands.registrar().register(TeamCommand.createCommand("djspectate", teamService, playerService), "Used to navigate spectating during a battle", List.of("djspec"));
         });
+
+        this.getServer().getPluginManager().registerEvents(new DbJoinListener(playerService), this);
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            var console = Bukkit.getServer().getConsoleSender();
+            String command = "djbattle init";
+            Bukkit.dispatchCommand(console, command);
+        }, 1);
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
 
+        this.getLogger().info("[PaperDjBattle] Plugin has been disabled!");
+    }
+
+    public static PaperDjBattlePlugin getPlugin() {
+        return plugin;
+    }
+
+    public static String getWorldName() {
+        Properties serverProperties = new Properties();
+        String mainWorldName;
+        try {
+            serverProperties.load(Files.newInputStream(Paths.get("server.properties")));
+            mainWorldName = serverProperties.getProperty("level-name");
+            if (mainWorldName == null) {
+                getPlugin().getLogger().severe("server.properties file is missing or broken. Continuing may result in undefined behaviour.");
+                mainWorldName = "world";
+            }
+        } catch (IOException e) {
+            getPlugin().getLogger().severe("server.properties file is missing or broken. Continuing may result in undefined behaviour.");
+            throw new RuntimeException(e);
+        }
+        return mainWorldName;
     }
 }

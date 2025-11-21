@@ -38,7 +38,7 @@ public class PlayerService {
             return playerDao.queryForAll();
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return List.of();
         }
     }
 
@@ -47,7 +47,39 @@ public class PlayerService {
             return playerDao.queryBuilder().where().isNull(DjPlayer.TEAM_COL_NAME).query();
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return List.of();
+        }
+    }
+
+
+    public List<DjPlayer> findNotMatching(List<UUID> uuids) {
+        try {
+            return playerDao.queryBuilder().where().notIn(DjPlayer.ID_COL_NAME, uuids).query();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public int deleteNotMatching(List<UUID> uuids) {
+        try {
+            var deleteBuild = playerDao.deleteBuilder();
+            deleteBuild.where().notIn(DjPlayer.ID_COL_NAME, uuids);
+            return deleteBuild.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    public int deleteTeamless() {
+        try {
+            var deleteBuild = playerDao.deleteBuilder();
+            deleteBuild.where().isNull(DjPlayer.TEAM_COL_NAME);
+            return deleteBuild.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 

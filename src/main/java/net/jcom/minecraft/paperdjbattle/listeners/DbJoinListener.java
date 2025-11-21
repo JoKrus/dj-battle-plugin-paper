@@ -7,10 +7,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-public class JoinListener implements Listener {
+public class DbJoinListener implements Listener {
     private final PlayerService playerService;
 
-    public JoinListener(PlayerService playerService) {
+    public DbJoinListener(PlayerService playerService) {
         this.playerService = playerService;
     }
 
@@ -18,9 +18,13 @@ public class JoinListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
 
-        if (playerService.findByUuid(player.getUniqueId()) == null) {
-            var djPlayer = new DjPlayer(player);
-            playerService.create(djPlayer);
+        var djPlayer = playerService.findByUuid(player.getUniqueId());
+        if (djPlayer == null) {
+            var newDjPlayer = new DjPlayer(player);
+            playerService.create(newDjPlayer);
+        } else if (!player.getName().equals(djPlayer.getName())) {
+            djPlayer.setName(player.getName());
+            playerService.update(djPlayer);
         }
     }
 }

@@ -84,6 +84,21 @@ public class TeamService {
         }
     }
 
+    public int removeEmptyTeams() {
+        try {
+            var innerQuery = playerDao.queryBuilder().distinct().selectColumns(DjPlayer.TEAM_COL_NAME).query();
+
+            var a = innerQuery.stream().map(DjPlayer::getTeam).map(Team::getId).toList();
+
+            var deleteBuild = teamDao.deleteBuilder();
+            deleteBuild.where().notIn(Team.ID_COL_NAME, a);
+            return deleteBuild.delete();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return 0;
+        }
+    }
+
     public Team findByName(String name) {
         try {
             return teamDao.queryBuilder().where()
