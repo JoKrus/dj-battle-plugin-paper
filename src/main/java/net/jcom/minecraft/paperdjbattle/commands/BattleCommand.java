@@ -106,7 +106,7 @@ public class BattleCommand {
 
         ArrayList<String> cmds = new ArrayList<>(alwaysCmds);
 
-        if (BattleStateManager.get().isGoingOn()) {
+        if (!BattleStateManager.get().isGoingOn()) {
             cmds.addAll(noBattleCmds);
         }
 

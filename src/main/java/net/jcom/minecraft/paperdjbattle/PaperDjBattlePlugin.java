@@ -9,7 +9,7 @@ import net.jcom.minecraft.paperdjbattle.config.DefaultsManager;
 import net.jcom.minecraft.paperdjbattle.database.impl.SqliteDatabase;
 import net.jcom.minecraft.paperdjbattle.database.services.PlayerService;
 import net.jcom.minecraft.paperdjbattle.database.services.TeamService;
-import net.jcom.minecraft.paperdjbattle.listeners.DbJoinListener;
+import net.jcom.minecraft.paperdjbattle.listeners.*;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -61,6 +61,11 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
             commands.registrar().register(TeamCommand.createCommand("djspectate", teamService, playerService), "Used to navigate spectating during a battle", List.of("djspec"));
         });
 
+        this.getServer().getPluginManager().registerEvents(new LobbyListener(this), this);
+        this.getServer().getPluginManager().registerEvents(new BattleHandler(this, teamService, playerService), this);
+        this.getServer().getPluginManager().registerEvents(new PlayerCommandSendListener(this), this);
+        this.getServer().getPluginManager().registerEvents(new PreventBedListener(this), this);
+        this.getServer().getPluginManager().registerEvents(new ChatListener(this), this);
         this.getServer().getPluginManager().registerEvents(new DbJoinListener(playerService), this);
 
         Bukkit.getScheduler().runTaskLater(this, () -> {
