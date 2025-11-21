@@ -30,6 +30,12 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        //TODO horizontal world border
+        //TODO tp before start so chunks can load (disable moving)
+        //TODO add grace period
+        //TODO spectator feature
+
+
         // Plugin startup logic
         plugin = this;
         this.getLogger().info("[PaperDjBattle] Plugin has been enabled!");
