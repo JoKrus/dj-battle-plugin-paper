@@ -166,7 +166,7 @@ public class BattleCommand {
         //clean up spectator
 
 
-        Bukkit.getPluginManager().callEvent(stopEvent);
+        stopEvent.callEvent();
         return Command.SINGLE_SUCCESS;
     }
 
@@ -216,8 +216,9 @@ public class BattleCommand {
                             "worldborder set " + DefaultsManager.getValue(Defaults.WORLD_BORDER_INIT_WIDTH) + " 0",
                             "worldborder set " + DefaultsManager.getValue(Defaults.WORLD_BORDER_END_WIDTH) + " " +
                                     DefaultsManager.getValue(Defaults.BATTLE_DURATION),
-                            //TODO needs to be spread more
-                            "tp @a " + DefaultsManager.getValue(Defaults.BATTLE_LOCATION),
+                            "spreadplayers " + getXZLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION)) + " 1 "
+                                    + DefaultsManager.getValue(Defaults.BATTLE_LOCATION_SPREAD_RADIUS) + " under " +
+                                    (Integer.parseInt(getYLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION))) + 12) + " true @a",
                             "gamemode survival @a"
                     );
 
@@ -300,6 +301,8 @@ public class BattleCommand {
                 }
             }
         }
+
+        teamService.setAllAlive();
     }
 
     private static String getXZLoc(String loc) {
@@ -308,5 +311,13 @@ public class BattleCommand {
 
         var arr = loc.split("\\s+");
         return arr[0] + " " + arr[2];
+    }
+
+    private static String getYLoc(String loc) {
+        if (loc == null)
+            return "256";
+
+        var arr = loc.split("\\s+");
+        return arr[1];
     }
 }

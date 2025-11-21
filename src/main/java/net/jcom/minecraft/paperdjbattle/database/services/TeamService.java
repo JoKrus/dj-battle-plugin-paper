@@ -156,6 +156,23 @@ public class TeamService {
         }
     }
 
+    public List<DjPlayer> getTeamMembersOfPlayer(UUID uuid) {
+        try {
+            var pl = playerDao.queryForId(uuid);
+            if (pl.getTeam() == null) {
+                return List.of();
+            }
+            var team = teamDao.queryForId(pl.getTeam().getId());
+            if (team == null) {
+                return List.of();
+            }
+            return team.getTeamMembers().stream().toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
     public ForeignCollection<DjPlayer> getTeamMembers(int teamId) {
         try {
             var team = teamDao.queryForId(teamId);
@@ -167,4 +184,13 @@ public class TeamService {
         }
     }
 
+    public void setAllAlive() {
+        try {
+            var update = teamDao.updateBuilder();
+            update.updateColumnValue(Team.ELIM_COL_NAME, Boolean.FALSE);
+            update.update();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

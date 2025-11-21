@@ -1,5 +1,6 @@
 package net.jcom.minecraft.paperdjbattle.listeners;
 
+import net.jcom.minecraft.paperdjbattle.PaperDjBattlePlugin;
 import net.jcom.minecraft.paperdjbattle.config.BattleStateManager;
 import net.jcom.minecraft.paperdjbattle.database.services.PlayerService;
 import net.jcom.minecraft.paperdjbattle.database.services.TeamService;
@@ -22,6 +23,7 @@ import java.nio.file.Paths;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.AQUA;
+import static net.kyori.adventure.text.format.TextDecoration.BOLD;
 
 public class BattleHandler implements Listener {
 
@@ -59,7 +61,34 @@ public class BattleHandler implements Listener {
                     0.f);
         }
 
-        //todo check if whole team is eliminated etc
+        var djPlayer = playerService.findByUuid(playerDeathEvent.getEntity().getUniqueId());
+        var teamPlayers = teamService.getTeamMembersOfPlayer(djPlayer.getPlayerid());
+
+        var anyAlive = false;
+        for (var player : teamPlayers) {
+            if (player.getPlayerid().equals(djPlayer.getPlayerid())) {
+                continue;
+            }
+            var bukkitPlayer = Bukkit.getPlayer(player.getPlayerid());
+            if (bukkitPlayer != null && bukkitPlayer.getGameMode() == GameMode.SURVIVAL && bukkitPlayer.getHealth() > 0) {
+                anyAlive = true;
+                break;
+            }
+        }
+
+        if (!anyAlive) {
+            Bukkit.getScheduler().scheduleSyncDelayedTask(PaperDjBattlePlugin.getPlugin(), () -> {
+                var comp = text().append(text("Team \"", AQUA))
+                        .append(text(djPlayer.getTeam().getTeamname(), AQUA, BOLD))
+                        .append(text("\" has been eliminated", AQUA));
+
+                Bukkit.broadcast(comp.build());
+            }, 10);
+            djPlayer.getTeam().setEliminated(true);
+            teamService.update(djPlayer.getTeam());
+        }
+
+        //todo check if only one team left
     }
 
     @EventHandler
