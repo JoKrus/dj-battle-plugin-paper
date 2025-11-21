@@ -193,4 +193,14 @@ public class TeamService {
             e.printStackTrace();
         }
     }
+
+    public int getTeamAmountAlive() {
+        try {
+            var query = teamDao.queryBuilder();
+            return (int) query.where().eq(Team.ELIM_COL_NAME, Boolean.FALSE).countOf();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
 }

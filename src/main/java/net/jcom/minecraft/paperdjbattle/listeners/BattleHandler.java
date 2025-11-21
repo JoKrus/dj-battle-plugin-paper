@@ -88,7 +88,11 @@ public class BattleHandler implements Listener {
             teamService.update(djPlayer.getTeam());
         }
 
-        //todo check if only one team left
+        if (teamService.getTeamAmountAlive() == 1) {
+            Bukkit.getScheduler().scheduleSyncDelayedTask(PaperDjBattlePlugin.getPlugin(), () -> {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "djbattle stop");
+            }, 10);
+        }
     }
 
     @EventHandler

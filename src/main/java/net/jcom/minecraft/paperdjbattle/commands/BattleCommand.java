@@ -147,7 +147,7 @@ public class BattleCommand {
                 "clear @a",
                 "worldborder center " + getXZLoc(DefaultsManager.getValue(Defaults.LOBBY_LOCATION)),
                 "worldborder set " + DefaultsManager.getValue(Defaults.WORLD_BORDER_LOBBY_WIDTH) + " 0",
-                "tp @a " + DefaultsManager.getValue(Defaults.LOBBY_LOCATION)
+                "spreadplayers " + getXZLoc(DefaultsManager.getValue(Defaults.LOBBY_LOCATION)) + " 0 2 false @a"
         );
 
         if (previousState == BattleState.RUNNING) {
