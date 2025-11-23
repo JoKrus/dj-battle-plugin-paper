@@ -3,7 +3,7 @@ package net.jcom.minecraft.paperdjbattle.config;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class Defaults {
-    public static final Pair<String, Object> GRACE_PERIOD = Pair.of("timers.grace-period", 20);
+    public static final Pair<String, Object> GRACE_PERIOD = Pair.of("timers.grace-period", 30);
     public static final Pair<String, Object> BATTLE_START = Pair.of("timers.battle-start", 10);
     public static final Pair<String, Object> BATTLE_DURATION = Pair.of("timers.battle-duration", 3600);
     public static final Pair<String, Object> BATTLE_LOCATION = Pair.of("locations.battle-location", "10000 257 10000");

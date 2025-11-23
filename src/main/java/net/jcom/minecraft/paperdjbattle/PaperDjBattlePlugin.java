@@ -32,8 +32,8 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         //TODO horizontal world border
         //TODO tp before start so chunks can load (disable moving)
-        //TODO add grace period
         //TODO spectator feature
+        //TODO minecraft teams (might help for spectator and spreadplayers)
 
 
         // Plugin startup logic

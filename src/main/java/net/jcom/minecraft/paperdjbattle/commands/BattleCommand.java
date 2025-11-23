@@ -18,12 +18,16 @@ import net.jcom.minecraft.paperdjbattle.event.BattleStartedEvent;
 import net.jcom.minecraft.paperdjbattle.event.BattleStoppedEvent;
 import net.jcom.minecraft.paperdjbattle.event.data.BattleData;
 import net.jcom.minecraft.paperdjbattle.event.data.TeamConfig;
+import net.jcom.minecraft.paperdjbattle.listeners.GracePeriodListener;
 import net.jcom.minecraft.paperdjbattle.utils.CountdownTimer;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -204,64 +208,7 @@ public class BattleCommand {
                 () -> {
                 },
                 () -> {
-                    List<String> cmds = List.of(
-                            "time set 0",
-                            "weather clear",
-                            "effect clear @a",
-                            "clear @a",
-                            "difficulty normal",
-                            "give @a minecraft:bread 10",
-                            "experience set @a 0",
-                            "worldborder center " + getXZLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION)),
-                            "worldborder set " + DefaultsManager.getValue(Defaults.WORLD_BORDER_INIT_WIDTH) + " 0",
-                            "worldborder set " + DefaultsManager.getValue(Defaults.WORLD_BORDER_END_WIDTH) + " " +
-                                    DefaultsManager.getValue(Defaults.BATTLE_DURATION),
-                            "spreadplayers " + getXZLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION)) + " 1 "
-                                    + DefaultsManager.getValue(Defaults.BATTLE_LOCATION_SPREAD_RADIUS) + " under " +
-                                    (Integer.parseInt(getYLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION))) + 12) + " true @a",
-                            "gamemode survival @a"
-                    );
-
-                    for (var cmd : cmds) {
-                        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd);
-                    }
-
-                    for (var p : Bukkit.getOnlinePlayers().toArray(new Player[0])) {
-                        p.setSaturation(5);
-                        p.setFoodLevel(20);
-                        p.setHealth(20);
-                    }
-
-                    //start graceperiod and stuff (with a timer too
-
-                    if (BattleStateManager.get().getState() == BattleState.LOBBY) {
-                        Bukkit.broadcast(text("Start has been cancelled!"));
-                        return;
-                    }
-                    var component = text().content("Battle ")
-                            .append(text(battleName, GOLD, BOLD))
-                            .append(text(" (%s) ".formatted(category), WHITE, ITALIC))
-                            .append(text("has started!"))
-                            .build();
-                    Bukkit.broadcast(component);
-
-                    BattleStateManager.get().setState(BattleState.RUNNING);
-
-                    //SpectatorManager.start();
-
-                    //var gracePeriod = new GracePeriodHandler(BattlePlugin.getPlugin());
-
-                    // send event
-                    //db has been corrected here
-                    var allTeams = teamService.findAll();
-                    var players = playerService.findAll();
-                    var config = TeamConfig.getConfig(allTeams, players);
-                    var battleData = BattleData.getBattleData(battleName, category);
-                    Bukkit.getPluginManager().callEvent(new BattleStartedEvent(config, battleData));
-
-
-                    //countDownGrace(DefaultsManager.getValue(Defaults.GRACE_PERIOD));
-                    //HandlerList.unregisterAll(gracePeriod);
+                    onBattleStart(battleName, category, teamService, playerService);
                 },
                 countdownTimer -> {
                     if (BattleStateManager.get().getState() == BattleState.LOBBY) {
@@ -269,6 +216,7 @@ public class BattleCommand {
                         countdownTimer.cancelTimer();
                         return;
                     }
+                    //TODO maybe tp here etc
 
                     Bukkit.broadcast(text(countdownTimer.getSecondsLeft() + "..."));
                 }
@@ -280,6 +228,93 @@ public class BattleCommand {
 
         return Command.SINGLE_SUCCESS;
     }
+
+    private static void onBattleStart(String battleName, String category, TeamService teamService, PlayerService playerService) {
+        List<String> cmds = List.of(
+                "time set 0",
+                "weather clear",
+                "effect clear @a",
+                "clear @a",
+                "difficulty normal",
+                "give @a minecraft:bread 10",
+                "experience set @a 0",
+                "worldborder center " + getXZLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION)),
+                "worldborder set " + DefaultsManager.getValue(Defaults.WORLD_BORDER_INIT_WIDTH) + " 0",
+                "worldborder set " + DefaultsManager.getValue(Defaults.WORLD_BORDER_END_WIDTH) + " " +
+                        DefaultsManager.getValue(Defaults.BATTLE_DURATION),
+                "spreadplayers " + getXZLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION)) + " 1 "
+                        + DefaultsManager.getValue(Defaults.BATTLE_LOCATION_SPREAD_RADIUS) + " under " +
+                        (Integer.parseInt(getYLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION))) + 12) + " true @a",
+                "gamemode survival @a"
+        );
+
+        for (var cmd : cmds) {
+            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd);
+        }
+
+        for (var p : Bukkit.getOnlinePlayers().toArray(new Player[0])) {
+            p.setSaturation(5);
+            p.setFoodLevel(20);
+            p.setHealth(20);
+        }
+
+        if (BattleStateManager.get().getState() == BattleState.LOBBY) {
+            Bukkit.broadcast(text("Start has been cancelled!"));
+            return;
+        }
+        var component = text().content("Battle ")
+                .append(text(battleName, GOLD, BOLD))
+                .append(text(" (%s) ".formatted(category), WHITE, ITALIC))
+                .append(text("has started!"))
+                .build();
+        Bukkit.broadcast(component);
+
+        BattleStateManager.get().setState(BattleState.RUNNING);
+
+        //SpectatorManager.start();
+
+        var gracePeriod = new GracePeriodListener();
+        Bukkit.getServer().getPluginManager().registerEvents(gracePeriod, PaperDjBattlePlugin.getPlugin());
+
+        // send event
+        //db has been corrected here
+        var allTeams = teamService.findAll();
+        var players = playerService.findAll();
+        var config = TeamConfig.getConfig(allTeams, players);
+        var battleData = BattleData.getBattleData(battleName, category);
+        Bukkit.getPluginManager().callEvent(new BattleStartedEvent(config, battleData));
+
+        var graceTimer = new CountdownTimer(PaperDjBattlePlugin.getPlugin(),
+                DefaultsManager.getValue(Defaults.GRACE_PERIOD),
+                () -> {
+                    Bukkit.broadcast(text(DefaultsManager.getValue(Defaults.GRACE_PERIOD) + " second grace period started!"));
+                },
+                () -> {
+                    Bukkit.broadcast(text("Fighting begins!", Style.style(TextDecoration.BOLD)));
+                    HandlerList.unregisterAll(gracePeriod);
+                },
+                countdownTimer -> {
+                    if (!BattleStateManager.get().isGoingOn()) {
+                        countdownTimer.cancelTimer();
+                        return;
+                    }
+
+                    if (countdownTimer.getSecondsLeft() > 20) {
+                        if (countdownTimer.getSecondsLeft() % 10 == 0) {
+                            Bukkit.broadcast(text(countdownTimer.getSecondsLeft() + " seconds until grace period ends!"));
+                        }
+                    } else if (countdownTimer.getSecondsLeft() > 5) {
+                        if (countdownTimer.getSecondsLeft() % 5 == 0) {
+                            Bukkit.broadcast(text(countdownTimer.getSecondsLeft() + " seconds until grace period ends!"));
+                        }
+                    } else {
+                        Bukkit.broadcast(text(countdownTimer.getSecondsLeft() + "..."));
+                    }
+                });
+        graceTimer.scheduleTimer();
+
+    }
+
 
     private static void correctTeamData(TeamService teamService, PlayerService playerService) {
         //remove offline players
