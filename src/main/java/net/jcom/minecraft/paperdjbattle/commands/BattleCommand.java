@@ -20,14 +20,20 @@ import net.jcom.minecraft.paperdjbattle.event.data.BattleData;
 import net.jcom.minecraft.paperdjbattle.event.data.TeamConfig;
 import net.jcom.minecraft.paperdjbattle.listeners.GracePeriodListener;
 import net.jcom.minecraft.paperdjbattle.utils.CountdownTimer;
+import net.jcom.minecraft.paperdjbattle.utils.DataUtils;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -38,6 +44,8 @@ import static net.kyori.adventure.text.format.TextDecoration.BOLD;
 import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
 
 public class BattleCommand {
+    private static BukkitTask yBorderTask;
+
     public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, TeamService teamService, PlayerService playerService) {
         return Commands.literal(commandName)
                 .then(Commands.literal("start")
@@ -126,6 +134,11 @@ public class BattleCommand {
         if (BattleStateManager.get().getState() == BattleState.LOBBY) {
             sender.sendMessage(text("No battle present right now.", RED));
             return 0;
+        }
+
+        if (yBorderTask != null && !yBorderTask.isCancelled()) {
+            yBorderTask.cancel();
+            yBorderTask = null;
         }
 
         var previousState = BattleStateManager.get().getState(); //countdown or running
@@ -313,6 +326,55 @@ public class BattleCommand {
                 });
         graceTimer.scheduleTimer();
 
+        //Todo retrigger when restarting server
+
+        var renderDistance = DefaultsManager.<Integer>getValue(Defaults.HORIZONTAL_BORDER_RENDER_DISTANCE);
+        var renderSize = DefaultsManager.<Integer>getValue(Defaults.HORIZONTAL_BORDER_RENDER_SIZE);
+        var ySpawn = Double.parseDouble(getYLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION)));
+        var totalTime = DefaultsManager.<Integer>getValue(Defaults.BATTLE_DURATION);
+        var delayTime = DefaultsManager.<Integer>getValue(Defaults.HORIZONTAL_BORDER_START);
+        yBorderTask = Bukkit.getScheduler().runTaskTimer(PaperDjBattlePlugin.getPlugin(), () -> {
+            var duration = BattleStateManager.get().incrementDuration();
+
+            var yMin = DataUtils.lerpWithDelay(duration, delayTime, totalTime, -80, ySpawn - 10);
+            var yMax = DataUtils.lerpWithDelay(duration, delayTime, totalTime, 350, ySpawn + 15);
+
+            drawHorizontalBorderAndDamage(yMin, yMax, renderDistance, renderSize);
+        }, 0, 20);
+
+    }
+
+
+    private static void drawHorizontalBorderAndDamage(double yLevelMin, double yLevelMax, int renderDistance, int renderSize) {
+        var allPlayersCloseToOuts = Bukkit.getOnlinePlayers().stream().filter(player -> {
+            var toLoc = player.getLocation();
+            return (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.CREATIVE)
+                    && (toLoc.y() <= yLevelMin + renderDistance || toLoc.y() >= yLevelMax - renderDistance);
+        }).toList();
+
+        for (var player : allPlayersCloseToOuts) {
+            var toLoc = player.getLocation();
+            double x = Math.floor(toLoc.getX()) + 0.5;
+            double z = Math.floor(toLoc.getZ()) + 0.5;
+            var yToCheckLow = toLoc.getY() + 0.1;
+            var yToCheckTop = player.getEyeLocation().getY() - 0.1;
+
+            for (int i = -renderSize; i <= renderSize; i++) {
+                for (int j = -renderSize; j <= renderSize; j++) {
+                    var particleTop = new Location(toLoc.getWorld(), x + i, yLevelMax, z + j);
+                    var particleBot = new Location(toLoc.getWorld(), x + i, yLevelMin, z + j);
+                    Particle.END_ROD.builder().location(particleTop).count(0).receivers(renderDistance + 15, false).spawn();
+                    Particle.END_ROD.builder().location(particleBot).count(0).receivers(renderDistance + 15, false).spawn();
+                }
+            }
+
+            if (player.getGameMode() == GameMode.SURVIVAL && (yToCheckLow <= yLevelMin || yToCheckTop >= yLevelMax)) {
+                player.damage(2, DamageSource.builder(DamageType.OUT_OF_WORLD).build());
+                player.sendActionBar(text("The horizontal border is close! Get to the center!", RED));
+            } else {
+                player.sendActionBar(text("The horizontal border is close! Get to the center!", YELLOW));
+            }
+        }
     }
 
 
