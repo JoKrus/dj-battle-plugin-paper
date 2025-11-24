@@ -36,7 +36,9 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
@@ -188,20 +190,10 @@ public class BattleCommand {
     }
 
     private static Team checkIfWon(TeamService teamService, PlayerService playerService) {
-        Set<Team> aliveTeams = new HashSet<>();
-
-        for (var pl : Bukkit.getOnlinePlayers().stream()
-                .filter(player -> player.getGameMode() == GameMode.SURVIVAL)
-                .toList()) {
-            var djPl = playerService.findByUuid(pl.getUniqueId());
-            if (djPl != null) {
-                var team = djPl.getTeam();
-                aliveTeams.add(team);
-            }
-        }
+        List<Team> aliveTeams = teamService.getTeamsAlive();
 
         if (aliveTeams.size() == 1) {
-            return aliveTeams.iterator().next();
+            return aliveTeams.getFirst();
         } else {
             return null;
         }

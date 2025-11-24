@@ -194,6 +194,16 @@ public class TeamService {
         }
     }
 
+    public List<Team> getTeamsAlive() {
+        try {
+            var query = teamDao.queryBuilder();
+            return query.where().eq(Team.ELIM_COL_NAME, Boolean.FALSE).query();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
     public int getTeamAmountAlive() {
         try {
             var query = teamDao.queryBuilder();
