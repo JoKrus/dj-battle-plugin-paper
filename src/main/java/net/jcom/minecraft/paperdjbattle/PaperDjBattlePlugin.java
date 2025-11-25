@@ -36,7 +36,6 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
         //TODO spectator feature
         //TODO minecraft teams (might help for spectator and spreadplayers)
         //TODO tp later after stop if winner
-        //todo disable player locator
 
 
         // Plugin startup logic

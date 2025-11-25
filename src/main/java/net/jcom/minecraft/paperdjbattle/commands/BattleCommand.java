@@ -133,7 +133,8 @@ public class BattleCommand {
                 "gamerule commandBlockOutput false",
                 "gamerule doWeatherCycle false",
                 "gamerule doPatrolSpawning false",
-                "gamerule disableRaids true"
+                "gamerule disableRaids true",
+                "gamerule locatorBar false"
         );
 
         List<String> noBattleCmds = List.of(
