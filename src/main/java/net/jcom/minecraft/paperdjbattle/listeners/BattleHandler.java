@@ -1,7 +1,9 @@
 package net.jcom.minecraft.paperdjbattle.listeners;
 
+import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
 import net.jcom.minecraft.paperdjbattle.PaperDjBattlePlugin;
 import net.jcom.minecraft.paperdjbattle.config.BattleStateManager;
+import net.jcom.minecraft.paperdjbattle.database.entities.DjPlayer;
 import net.jcom.minecraft.paperdjbattle.database.services.PlayerService;
 import net.jcom.minecraft.paperdjbattle.database.services.TeamService;
 import net.jcom.minecraft.paperdjbattle.utils.DataUtils;
@@ -21,9 +23,12 @@ import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.AQUA;
+import static net.kyori.adventure.text.format.NamedTextColor.RED;
 import static net.kyori.adventure.text.format.TextDecoration.BOLD;
 
 public class BattleHandler implements Listener {
@@ -46,14 +51,6 @@ public class BattleHandler implements Listener {
 
         var deathLocation = playerDeathEvent.getEntity().getLocation();
         DataUtils.setAndSave(battleData, playerDeathEvent.getEntity().getUniqueId() + ".location", deathLocation);
-
-        if (playerDeathEvent.getEntity().getGameMode() == GameMode.SPECTATOR) {
-            playerDeathEvent.deathMessage(null);
-            //Spectator mode is bugged when switching to spectator during respawn so noclip and spec menu is not present
-            //which is what we want so swapping here
-            playerDeathEvent.getEntity().setGameMode(GameMode.SURVIVAL);
-            return;
-        }
 
         playerDeathEvent.deathMessage(text("A player has died.", AQUA));
         playerDeathEvent.getEntity().getWorld().strikeLightningEffect(deathLocation);
@@ -87,7 +84,27 @@ public class BattleHandler implements Listener {
             }, 10);
             djPlayer.getTeam().setEliminated(true);
             teamService.update(djPlayer.getTeam());
+        } else {
+            //move all spectating teammemvers to other teammate
+            //TODO check if works
+            //TODO there are some problems
+            var teamMateSpecs = playerService.findAllSpectatingTeammates(djPlayer.getPlayerid());
+            //check if teamMateSpecs is correctly filled
+
+            var alive = djPlayer.getTeamMembersAlive();
+            var aliveFirst = alive.getFirst();
+            for (var teamMate : teamMateSpecs) {
+                teamMate.setSpectateTarget(aliveFirst);
+                playerService.update(teamMate);
+            }
         }
+
+        var specs = playerService.findAllSpectators(djPlayer.getPlayerid());
+        for (var spec : specs) {
+            spec.setSpectateTarget(null);
+            playerService.update(spec);
+        }
+
 
         if (teamService.getTeamAmountAlive() == 1) {
             Bukkit.getScheduler().scheduleSyncDelayedTask(PaperDjBattlePlugin.getPlugin(), () -> {
@@ -98,17 +115,31 @@ public class BattleHandler implements Listener {
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent playerRespawnEvent) {
+        var pl = playerRespawnEvent.getPlayer();
         if (BattleStateManager.get().isGoingOn()) {
             playerRespawnEvent.getPlayer().setGameMode(GameMode.SPECTATOR);
 
-            //TODO check if teammate still alive, if yes to spectator mode fun
-            FileConfiguration config = YamlConfiguration.loadConfiguration(battleData);
-            var loc = config.getLocation(playerRespawnEvent.getPlayer().getUniqueId() + ".location");
-            if (loc != null) {
-                playerRespawnEvent.setRespawnLocation(loc);
+            var djPl = playerService.findByUuid(pl.getUniqueId());
+            var teamMembers = djPl.getTeamMembersAlive();
+
+            if (!teamMembers.isEmpty()) {
+                var djTarget = teamMembers.getFirst();
+                var target = Bukkit.getPlayer(djTarget.getPlayerid());
+                if (target != null) {
+                    playerRespawnEvent.setRespawnLocation(target.getLocation());
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(PaperDjBattlePlugin.getPlugin(), () -> {
+                        tpAndSpectate(djPl, djTarget);
+                    }, 5);
+                }
+            } else {
+                FileConfiguration config = YamlConfiguration.loadConfiguration(battleData);
+                var loc = config.getLocation(pl.getUniqueId() + ".location");
+                if (loc != null) {
+                    playerRespawnEvent.setRespawnLocation(loc);
+                }
             }
         }
-        DataUtils.setAndSave(battleData, playerRespawnEvent.getPlayer().getUniqueId() + ".location", null);
+        DataUtils.setAndSave(battleData, pl.getUniqueId() + ".location", null);
     }
 
     @EventHandler
@@ -148,6 +179,29 @@ public class BattleHandler implements Listener {
         }
     }
 
+
+    private static final HashMap<Player, LocalDateTime> lastMessageSend = new HashMap<>();
+
+    @EventHandler
+    public void onSpectatorLeave(PlayerStopSpectatingEntityEvent playerStopSpectatingEntityEvent) {
+        var pl = playerStopSpectatingEntityEvent.getPlayer();
+        var djPl = playerService.findByUuid(pl.getUniqueId());
+
+        if (!djPl.getTeamMembersAlive().isEmpty()) {
+            if (LocalDateTime.now().minusSeconds(2).isAfter(
+                    lastMessageSend.getOrDefault(pl, LocalDateTime.now().minusSeconds(3)))) {
+                var comp = text("You can not leave your target when your team mates are still alive!\n" +
+                        "You can switch with /djspec <targetName> to another teammate.", RED);
+                pl.sendMessage(comp);
+                lastMessageSend.put(pl, LocalDateTime.now());
+            }
+            playerStopSpectatingEntityEvent.setCancelled(true);
+        } else {
+            djPl.setSpectateTarget(null);
+            playerService.update(djPl);
+        }
+    }
+
     private static boolean isInsideBorder(Player player) {
         return !isOutsideBorder(player);
     }
@@ -159,5 +213,23 @@ public class BattleHandler implements Listener {
         Location location = player.getLocation(), center = border.getCenter();
 
         return center.distanceSquared(location) >= (radius * radius);
+    }
+
+
+    public static void tpAndSpectate(DjPlayer spec, DjPlayer target) {
+        var sp = Bukkit.getPlayer(spec.getPlayerid());
+        var targetSp = Bukkit.getPlayer(target.getPlayerid());
+        if (targetSp != null && sp != null) {
+            tpAndSpectate(sp, targetSp);
+        }
+    }
+
+    public static void tpAndSpectate(Player spec, Player target) {
+        spec.teleport(target);
+        if (spec.getSpectatorTarget() == null || !spec.getSpectatorTarget().equals(target)) {
+            Bukkit.getScheduler().scheduleSyncDelayedTask(PaperDjBattlePlugin.getPlugin(), () -> {
+                spec.setSpectatorTarget(target);
+            }, 5);
+        }
     }
 }

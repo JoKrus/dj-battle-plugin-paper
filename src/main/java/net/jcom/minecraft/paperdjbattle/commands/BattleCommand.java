@@ -274,8 +274,7 @@ public class BattleCommand {
                 "worldborder set " + DefaultsManager.getValue(Defaults.WORLD_BORDER_END_WIDTH) + " " +
                         DefaultsManager.getValue(Defaults.BATTLE_DURATION),
                 "spreadplayers " + getXZLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION)) + " 1 "
-                        + DefaultsManager.getValue(Defaults.BATTLE_LOCATION_SPREAD_RADIUS) + " under " +
-                        (Integer.parseInt(getYLoc(DefaultsManager.getValue(Defaults.BATTLE_LOCATION))) + 12) + " true @a",
+                        + DefaultsManager.getValue(Defaults.BATTLE_LOCATION_SPREAD_RADIUS) + " false @a",
                 "gamemode survival @a"
         );
 

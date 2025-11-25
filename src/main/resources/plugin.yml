@@ -18,9 +18,9 @@ commands:
     description: Used for team creation, joining a team and leaving a team
     permission: battle-plugin.team
 
-  djspec:
+  djspectate:
     usage: /<command> 'playerName'
-    aliases: [ djspectate ]
+    aliases: [ ]
     description: Used to navigate spectating during a battle
     permission: battle-plugin.spectate
 

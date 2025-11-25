@@ -2,6 +2,7 @@ package net.jcom.minecraft.paperdjbattle;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.jcom.minecraft.paperdjbattle.commands.BattleCommand;
+import net.jcom.minecraft.paperdjbattle.commands.SpectateCommand;
 import net.jcom.minecraft.paperdjbattle.commands.TeamCommand;
 import net.jcom.minecraft.paperdjbattle.config.BattleStateManager;
 import net.jcom.minecraft.paperdjbattle.config.Defaults;
@@ -32,8 +33,9 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         //TODO reset border movements on init start if battle runs
         //TODO tp before start so chunks can load (disable moving)
-        //TODO spectator feature
         //TODO tp later after stop if winner
+        //TODO fix spectator switchover bug
+        //TODO reenable gamemode switcher interrupt when done
 
 
         // Plugin startup logic
@@ -64,7 +66,7 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             commands.registrar().register(BattleCommand.createCommand("djbattle", teamService, playerService), "Manages the battle (Start, Stop, Init etc.)", List.of());
             commands.registrar().register(TeamCommand.createCommand("djteam", teamService, playerService), "Used for team creation, joining a team and leaving a team", List.of());
-            commands.registrar().register(TeamCommand.createCommand("djspectate", teamService, playerService), "Used to navigate spectating during a battle", List.of("djspec"));
+            commands.registrar().register(SpectateCommand.createCommand("djspectate", teamService, playerService), "Used to navigate spectating during a battle", List.of("djspec"));
         });
 
         this.getServer().getPluginManager().registerEvents(new LobbyListener(this), this);
