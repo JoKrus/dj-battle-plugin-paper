@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -115,6 +116,23 @@ public class BattleHandler implements Listener {
         if (playerQuitEvent.getPlayer().getGameMode() == GameMode.SURVIVAL) {
             playerQuitEvent.getPlayer().setHealth(0);
         }
+    }
+
+    @EventHandler
+    public void onGameMode(PlayerGameModeChangeEvent playerGameModeChangeEvent) {
+        //TODO disable gamemode switching during battle
+        /*
+        if (BattleStateManager.get().isGoingOn()) {
+            if (playerGameModeChangeEvent.getNewGameMode() == GameMode.CREATIVE) {
+                playerGameModeChangeEvent.setCancelled(true);
+                playerGameModeChangeEvent.cancelMessage(text("You're not allowed to change your gamemode!", RED));
+            } else if (playerGameModeChangeEvent.getNewGameMode() == GameMode.SURVIVAL
+                    && playerGameModeChangeEvent.getPlayer().getGameMode() == GameMode.SPECTATOR) {
+                playerGameModeChangeEvent.setCancelled(true);
+                playerGameModeChangeEvent.cancelMessage(text("You're not allowed to change your gamemode!", RED));
+            }
+        }
+        */
     }
 
     @EventHandler

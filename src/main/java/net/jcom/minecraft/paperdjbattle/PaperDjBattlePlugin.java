@@ -31,10 +31,8 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         //TODO reset border movements on init start if battle runs
-        //TODO prevent gamemode switching during battle
         //TODO tp before start so chunks can load (disable moving)
         //TODO spectator feature
-        //TODO minecraft teams (might help for spectator and spreadplayers)
         //TODO tp later after stop if winner
 
 

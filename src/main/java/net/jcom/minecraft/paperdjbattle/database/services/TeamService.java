@@ -148,14 +148,6 @@ public class TeamService {
         }
     }
 
-    public void deleteById(int id) {
-        try {
-            teamDao.deleteById(id);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public List<DjPlayer> getTeamMembersOfPlayer(UUID uuid) {
         try {
             var pl = playerDao.queryForId(uuid);
