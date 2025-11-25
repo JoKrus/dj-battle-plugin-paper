@@ -23,7 +23,7 @@ public class PlayerCommandSendListener implements Listener {
     public void onCommandSend(PlayerCommandPreprocessEvent playerCommandPreprocessEvent) {
         String cmd = playerCommandPreprocessEvent.getMessage().substring(1);
         if (BattleStateManager.get().getState() != BattleState.LOBBY) {
-            List<String> prefixes = List.of("djspec", "djteam list", "djbattle stop", "say");
+            List<String> prefixes = List.of("djspec", "djteam list", "djbattle stop", "djbattle border-stop", "say");
 
             boolean startsWithPrefix = false;
             for (String prefix : prefixes) {

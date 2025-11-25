@@ -30,7 +30,6 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        //TODO emergency stop HorizontalBorder via command
         //TODO reset border movements on init start if battle runs
         //TODO prevent gamemode switching during battle
         //TODO tp before start so chunks can load (disable moving)

@@ -7,7 +7,7 @@ libraries:
 
 commands:
   djbattle:
-    usage: /<command> [start 'name' 'category' | stop | init | reload]
+    usage: /<command> [start 'name' 'category' | stop | init | reload | border-stop]
     aliases: [ ]
     description: Manages the battle (Start, Stop, Init etc.)
     permission: battle-plugin.battle
@@ -44,6 +44,7 @@ permissions:
       stop: true
       reload: true
       init: true
+      border-stop: true
 
   battle-plugin.battle.start:
     default: op
@@ -60,6 +61,10 @@ permissions:
   battle-plugin.battle.init:
     default: op
     description: Permission to initialize a battle world from config | Permission
+
+  battle-plugin.battle.border-stop:
+    default: op
+    description: Permission to disable the horizontal border | Permission
 
   battle-plugin.team:
     default: true

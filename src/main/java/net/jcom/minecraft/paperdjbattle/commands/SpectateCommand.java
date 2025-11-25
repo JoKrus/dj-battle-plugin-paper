@@ -13,6 +13,7 @@ public class SpectateCommand {
     public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, TeamService teamService, PlayerService playerService) {
         return Commands.literal(commandName)
                 .then(Commands.argument("target", ArgumentTypes.player())
+                        .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("battle-plugin.spectate"))
                         .executes(context -> {
                             return runSpectateTarget(context, teamService, playerService);
                         }))

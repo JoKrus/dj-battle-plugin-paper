@@ -51,17 +51,20 @@ public class BattleCommand {
     public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, TeamService teamService, PlayerService playerService) {
         return Commands.literal(commandName)
                 .then(Commands.literal("start")
+                        .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("battle-plugin.battle.start"))
                         .executes(commandContext -> {
                             var sender = commandContext.getSource().getSender();
                             return runStart(sender, "DJ-Classic " + UUID.randomUUID(), "classic", teamService, playerService);
                         })
                         .then(Commands.argument("battleName", StringArgumentType.string())
+                                .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("battle-plugin.battle.start"))
                                 .executes(commandContext -> {
                                     var sender = commandContext.getSource().getSender();
                                     String battleName = StringArgumentType.getString(commandContext, "battleName");
                                     return runStart(sender, battleName, "classic", teamService, playerService);
                                 })
                                 .then(Commands.argument("category", StringArgumentType.string())
+                                        .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("battle-plugin.battle.start"))
                                         .executes(commandContext -> {
                                             var sender = commandContext.getSource().getSender();
                                             String category = StringArgumentType.getString(commandContext, "category");
@@ -69,27 +72,49 @@ public class BattleCommand {
                                             return runStart(sender, battleName, category, teamService, playerService);
                                         }))))
                 .then(Commands.literal("stop")
+                        .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("battle-plugin.battle.stop"))
                         .executes(commandContext -> {
                             var sender = commandContext.getSource().getSender();
                             return runStop(sender, false, teamService, playerService);
                         }).then(Commands.argument("wasCancelled", BoolArgumentType.bool())
+                                .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("battle-plugin.battle.stop"))
                                 .executes(context -> {
                                     var sender = context.getSource().getSender();
                                     var cancelled = BoolArgumentType.getBool(context, "wasCancelled");
                                     return runStop(sender, cancelled, teamService, playerService);
                                 })))
                 .then(Commands.literal("init")/*.requires(BattleNotGoingOn usw)*/
+                        .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("battle-plugin.battle.init"))
                         .executes(commandContext -> {
                             var sender = commandContext.getSource().getSender();
                             return runInit(sender);
                         }))
                 .then(Commands.literal("reload")
+                        .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("battle-plugin.battle.reload"))
                         .executes(commandContext ->
                         {
                             var sender = commandContext.getSource().getSender();
                             return runReload(sender);
                         }))
+                .then(Commands.literal("border-stop")
+                        .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("battle-plugin.battle.border-stop"))
+                        .executes(commandContext -> {
+                            var sender = commandContext.getSource().getSender();
+                            return runBorderStop(sender);
+                        }))
                 .build();
+    }
+
+    private static int runBorderStop(CommandSender sender) {
+        if (yBorderTask != null && !yBorderTask.isCancelled()) {
+            yBorderTask.cancel();
+            yBorderTask = null;
+            sender.sendMessage(text("Horizontal border disabled!"));
+        } else {
+            sender.sendMessage(text("No border present to disable!", RED));
+        }
+
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int runReload(CommandSender sender) {
