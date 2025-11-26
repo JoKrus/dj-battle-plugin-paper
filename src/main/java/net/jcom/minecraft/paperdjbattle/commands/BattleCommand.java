@@ -47,6 +47,7 @@ import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
 
 public class BattleCommand {
     private static BukkitTask yBorderTask;
+    private static GracePeriodListener gracePeriod;
 
     public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, TeamService teamService, PlayerService playerService) {
         return Commands.literal(commandName)
@@ -167,6 +168,10 @@ public class BattleCommand {
         if (yBorderTask != null && !yBorderTask.isCancelled()) {
             yBorderTask.cancel();
             yBorderTask = null;
+        }
+
+        if (gracePeriod != null) {
+            HandlerList.unregisterAll(gracePeriod);
         }
 
         var previousState = BattleStateManager.get().getState(); //countdown or running
@@ -303,7 +308,7 @@ public class BattleCommand {
 
         //SpectatorManager.start();
 
-        var gracePeriod = new GracePeriodListener();
+        gracePeriod = new GracePeriodListener();
         Bukkit.getServer().getPluginManager().registerEvents(gracePeriod, PaperDjBattlePlugin.getPlugin());
 
         // send event

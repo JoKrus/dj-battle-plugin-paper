@@ -52,11 +52,15 @@ public class BattleHandler implements Listener {
         var deathLocation = playerDeathEvent.getEntity().getLocation();
         DataUtils.setAndSave(battleData, playerDeathEvent.getEntity().getUniqueId() + ".location", deathLocation);
 
-        playerDeathEvent.deathMessage(text("A player has died.", AQUA));
-        playerDeathEvent.getEntity().getWorld().strikeLightningEffect(deathLocation);
-        for (var player : Bukkit.getOnlinePlayers()) {
-            player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, SoundCategory.PLAYERS, 1.f,
-                    0.f);
+        if (playerDeathEvent.getPlayer().getGameMode() == GameMode.SPECTATOR) {
+            playerDeathEvent.deathMessage(null);
+        } else {
+            playerDeathEvent.deathMessage(text("A player has died.", AQUA));
+            playerDeathEvent.getEntity().getWorld().strikeLightningEffect(deathLocation);
+            for (var player : Bukkit.getOnlinePlayers()) {
+                player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, SoundCategory.PLAYERS, 1.f,
+                        0.f);
+            }
         }
 
         var djPlayer = playerService.findByUuid(playerDeathEvent.getEntity().getUniqueId());
@@ -74,7 +78,7 @@ public class BattleHandler implements Listener {
             }
         }
 
-        if (!anyAlive) {
+        if (!anyAlive && playerDeathEvent.getPlayer().getGameMode() == GameMode.SURVIVAL) {
             Bukkit.getScheduler().scheduleSyncDelayedTask(PaperDjBattlePlugin.getPlugin(), () -> {
                 var comp = text().append(text("Team \"", AQUA))
                         .append(text(djPlayer.getTeam().getTeamname(), AQUA, BOLD))
@@ -169,10 +173,14 @@ public class BattleHandler implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent playerJoinEvent) {
         if (BattleStateManager.get().isGoingOn()) {
-            playerJoinEvent.getPlayer().getInventory().clear();
-            playerJoinEvent.getPlayer().setGameMode(GameMode.SPECTATOR);
-            playerJoinEvent.getPlayer().sendMessage("Battle is already going on, so you are in spectator mode.");
-            playerJoinEvent.getPlayer().setHealth(0);
+            if (playerJoinEvent.getPlayer().getGameMode() == GameMode.SPECTATOR) {
+                playerJoinEvent.getPlayer().setHealth(0);
+            } else {
+                playerJoinEvent.getPlayer().getInventory().clear();
+                playerJoinEvent.getPlayer().setGameMode(GameMode.SPECTATOR);
+                playerJoinEvent.getPlayer().sendMessage("Battle is already going on, so you are in spectator mode.");
+                playerJoinEvent.getPlayer().setHealth(0);
+            }
         } else if (isOutsideBorder(playerJoinEvent.getPlayer())) {
             playerJoinEvent.getPlayer().setHealth(0);
             playerJoinEvent.getPlayer().setGameMode(GameMode.ADVENTURE);
