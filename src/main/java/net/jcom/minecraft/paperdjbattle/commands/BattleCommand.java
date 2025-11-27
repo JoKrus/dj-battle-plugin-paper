@@ -36,6 +36,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,6 +48,7 @@ import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
 public class BattleCommand {
     private static BukkitTask yBorderTask;
     private static GracePeriodListener gracePeriod;
+    private static CountdownTimer graceTimer;
     private static PreBattleListener preBattle;
 
     public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, TeamService teamService, PlayerService playerService) {
@@ -160,7 +162,7 @@ public class BattleCommand {
     }
 
     private static int runStop(CommandSender sender, boolean wasCancelled, TeamService teamService, PlayerService playerService) {
-        if (BattleStateManager.get().getState() == BattleState.LOBBY) {
+        if (BattleStateManager.get().getState() == BattleState.LOBBY || BattleStateManager.get().getState() == BattleState.COOLDOWN_AFTER_WIN) {
             sender.sendMessage(text("No battle present right now.", RED));
             return 0;
         }
@@ -169,7 +171,9 @@ public class BattleCommand {
             yBorderTask.cancel();
             yBorderTask = null;
         }
-
+        if (graceTimer != null) {
+            graceTimer.cancelTimer();
+        }
         if (gracePeriod != null) {
             HandlerList.unregisterAll(gracePeriod);
         }
@@ -178,7 +182,7 @@ public class BattleCommand {
         }
 
         var previousState = BattleStateManager.get().getState(); //countdown or running
-        BattleStateManager.get().setState(BattleState.LOBBY);
+        BattleStateManager.get().setState(BattleState.COOLDOWN_AFTER_WIN);
 
         Team winnerTeam = null;
         String winnerTeamName = null;
@@ -189,7 +193,9 @@ public class BattleCommand {
         if (winnerTeam != null) {
             winnerTeamName = winnerTeam.getTeamname();
         }
+
         stopEvent = new BattleStoppedEvent(winnerTeamName, wasCancelled);
+        stopEvent.callEvent();
 
 
         List<String> cmds = List.of(
@@ -203,23 +209,38 @@ public class BattleCommand {
                 "spreadplayers " + getXZLoc(DefaultsManager.getValue(Defaults.LOBBY_LOCATION)) + " 0 2 false @a"
         );
 
-        if (previousState == BattleState.RUNNING || previousState == BattleState.COUNTDOWN_AFTER_TP) {
-            for (var cmd : cmds) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd);
-            }
-        }
-
-        var component = text("Battle was stopped!");
-        Bukkit.broadcast(component);
         if (!wasCancelled && winnerTeam != null) {
             var comp = text("", AQUA).append(text(winnerTeam.getTeamname(), AQUA, BOLD)).append(text(" has won the battle! Congratulations!"));
             Bukkit.broadcast(comp);
+            CountdownTimer timer = new CountdownTimer(PaperDjBattlePlugin.getPlugin(),
+                    DefaultsManager.<Integer>getValue(Defaults.STOP_COUNTDOWN_AFTER_WIN),
+                    () -> {
+                        gracePeriod = new GracePeriodListener();
+                        Bukkit.getServer().getPluginManager().registerEvents(gracePeriod, PaperDjBattlePlugin.getPlugin());
+                    },
+                    () -> {
+                        for (var cmd : cmds) {
+                            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd);
+                        }
+                        HandlerList.unregisterAll(gracePeriod);
+                        BattleStateManager.get().setState(BattleState.LOBBY);
+                    },
+                    countdownTimer -> {
+                        countdownBroadcastLogic(countdownTimer.getSecondsLeft(), countdownTimer.getTotalSeconds(), " seconds until teleporting back to lobby!");
+                    }
+            );
+            timer.scheduleTimer();
+        } else {
+            var component = text("Battle was stopped!");
+            Bukkit.broadcast(component);
+            if (previousState == BattleState.RUNNING || previousState == BattleState.COUNTDOWN_AFTER_TP) {
+                for (var cmd : cmds) {
+                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd);
+                }
+            }
+            BattleStateManager.get().setState(BattleState.LOBBY);
         }
 
-        //clean up spectator
-
-
-        stopEvent.callEvent();
         return Command.SINGLE_SUCCESS;
     }
 
@@ -347,7 +368,7 @@ public class BattleCommand {
         var battleData = BattleData.getBattleData(battleName, category);
         Bukkit.getPluginManager().callEvent(new BattleStartedEvent(config, battleData));
 
-        var graceTimer = new CountdownTimer(PaperDjBattlePlugin.getPlugin(),
+        graceTimer = new CountdownTimer(PaperDjBattlePlugin.getPlugin(),
                 DefaultsManager.getValue(Defaults.GRACE_PERIOD),
                 () -> {
                     Bukkit.broadcast(text(DefaultsManager.getValue(Defaults.GRACE_PERIOD) + " second grace period started!"));
@@ -463,6 +484,12 @@ public class BattleCommand {
         }
 
         teamService.setAllAlive();
+    }
+
+    public static Location getLocation(String strLoc) {
+        var locArr = Arrays.stream(strLoc.split(" +")).mapToInt(Integer::parseInt).toArray();
+        var loc = new Location(Bukkit.getWorld(PaperDjBattlePlugin.getWorldName()), locArr[0], locArr[1], locArr[2]);
+        return loc;
     }
 
     private static String getXZLoc(String loc) {

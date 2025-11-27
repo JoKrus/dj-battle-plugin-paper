@@ -6,8 +6,7 @@ import org.bukkit.plugin.Plugin;
 import java.io.File;
 import java.io.IOException;
 
-import static net.jcom.minecraft.paperdjbattle.config.BattleState.LOBBY;
-import static net.jcom.minecraft.paperdjbattle.config.BattleState.RUNNING;
+import static net.jcom.minecraft.paperdjbattle.config.BattleState.*;
 
 public final class BattleStateManager {
     private static final BattleStateManager instance = new BattleStateManager();
@@ -49,7 +48,7 @@ public final class BattleStateManager {
     }
 
     public boolean isGoingOn() {
-        return state == RUNNING;
+        return state == RUNNING || state == COOLDOWN_AFTER_WIN;
     }
 
     public BattleState getState() {

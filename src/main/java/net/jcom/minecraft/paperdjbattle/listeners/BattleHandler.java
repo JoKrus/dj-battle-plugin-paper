@@ -2,7 +2,11 @@ package net.jcom.minecraft.paperdjbattle.listeners;
 
 import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
 import net.jcom.minecraft.paperdjbattle.PaperDjBattlePlugin;
+import net.jcom.minecraft.paperdjbattle.commands.BattleCommand;
+import net.jcom.minecraft.paperdjbattle.config.BattleState;
 import net.jcom.minecraft.paperdjbattle.config.BattleStateManager;
+import net.jcom.minecraft.paperdjbattle.config.Defaults;
+import net.jcom.minecraft.paperdjbattle.config.DefaultsManager;
 import net.jcom.minecraft.paperdjbattle.database.entities.DjPlayer;
 import net.jcom.minecraft.paperdjbattle.database.services.PlayerService;
 import net.jcom.minecraft.paperdjbattle.database.services.TeamService;
@@ -45,7 +49,7 @@ public class BattleHandler implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeath(PlayerDeathEvent playerDeathEvent) {
-        if (!BattleStateManager.get().isGoingOn()) {
+        if (BattleStateManager.get().getState() != BattleState.RUNNING) {
             return;
         }
 
@@ -96,10 +100,12 @@ public class BattleHandler implements Listener {
             //check if teamMateSpecs is correctly filled
 
             var alive = djPlayer.getTeamMembersAlive();
-            var aliveFirst = alive.getFirst();
-            for (var teamMate : teamMateSpecs) {
-                teamMate.setSpectateTarget(aliveFirst);
-                playerService.update(teamMate);
+            if (!alive.isEmpty()) {
+                var aliveFirst = alive.getFirst();
+                for (var teamMate : teamMateSpecs) {
+                    teamMate.setSpectateTarget(aliveFirst);
+                    playerService.update(teamMate);
+                }
             }
         }
 
@@ -142,6 +148,10 @@ public class BattleHandler implements Listener {
                     playerRespawnEvent.setRespawnLocation(loc);
                 }
             }
+        } else {
+            var strLoc = DefaultsManager.<String>getValue(Defaults.LOBBY_LOCATION);
+            var loc = BattleCommand.getLocation(strLoc);
+            playerRespawnEvent.setRespawnLocation(loc);
         }
         DataUtils.setAndSave(battleData, pl.getUniqueId() + ".location", null);
     }

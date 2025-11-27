@@ -8,6 +8,7 @@ public class Defaults {
     public static final Pair<String, Object> GRACE_PERIOD = Pair.of("timers.grace-period", 30);
     public static final Pair<String, Object> BATTLE_COUNTDOWN_TO_TP = Pair.of("timers.battle-countdown-to-tp", 10);
     public static final Pair<String, Object> BATTLE_COUNTDOWN_TO_START = Pair.of("timers.battle-countdown-to-start", 20);
+    public static final Pair<String, Object> STOP_COUNTDOWN_AFTER_WIN = Pair.of("timers.stop-countdown-after-win", 60);
     public static final Pair<String, Object> BATTLE_DURATION = Pair.of("timers.battle-duration", DEFAULT_BATTLE_DURATION);
     public static final Pair<String, Object> HORIZONTAL_BORDER_START = Pair.of("timers.horizontal-border-start-move", DEFAULT_BATTLE_DURATION / 2);
     public static final Pair<String, Object> BATTLE_LOCATION = Pair.of("locations.battle-location", "10000 257 10000");

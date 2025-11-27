@@ -4,6 +4,7 @@ public enum BattleState {
     RUNNING,
     COUNTDOWN,
     COUNTDOWN_AFTER_TP,
+    COOLDOWN_AFTER_WIN,
     LOBBY;
 
     public static String to(BattleState value) {
