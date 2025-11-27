@@ -11,6 +11,7 @@ import static net.jcom.minecraft.paperdjbattle.config.BattleState.RUNNING;
 
 public final class BattleStateManager {
     private static final BattleStateManager instance = new BattleStateManager();
+    private static final String FILE_NAME = "battleGoingOn.yml";
     private static final String STATE_NAME = "state";
     private static final BattleState STATE_DEFAULT = LOBBY;
     private static final String DURATION_NAME = "going-on-since";
@@ -31,7 +32,7 @@ public final class BattleStateManager {
     }
 
     public void init(Plugin plugin) {
-        this.file = new File(plugin.getDataFolder(), "battleGoingOn.yml");
+        this.file = new File(plugin.getDataFolder(), FILE_NAME);
 
         if (!file.exists()) {
             yaml = new YamlConfiguration();

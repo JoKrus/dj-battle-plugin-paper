@@ -3,6 +3,7 @@ package net.jcom.minecraft.paperdjbattle.config;
 public enum BattleState {
     RUNNING,
     COUNTDOWN,
+    COUNTDOWN_AFTER_TP,
     LOBBY;
 
     public static String to(BattleState value) {
