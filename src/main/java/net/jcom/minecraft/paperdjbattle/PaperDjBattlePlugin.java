@@ -32,8 +32,8 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         //TODO reset border movements on init start if battle runs
-        //TODO tp later after stop if winner
         //TODO add notification/ad for /djspec
+        //TODO fix spectator getspectatingteammates query logic
         //TODO reenable gamemode switcher interrupt when done
         //TODO create and enhance readme (server.properties spawn protection 0, allow nether etc)
 

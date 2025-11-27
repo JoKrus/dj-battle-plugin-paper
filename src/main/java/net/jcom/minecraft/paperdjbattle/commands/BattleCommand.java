@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
@@ -47,6 +48,7 @@ import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
 
 public class BattleCommand {
     private static BukkitTask yBorderTask;
+    private static BukkitTask worldCenterTask;
     private static GracePeriodListener gracePeriod;
     private static CountdownTimer graceTimer;
     private static PreBattleListener preBattle;
@@ -170,6 +172,10 @@ public class BattleCommand {
         if (yBorderTask != null && !yBorderTask.isCancelled()) {
             yBorderTask.cancel();
             yBorderTask = null;
+        }
+        if (worldCenterTask != null && !worldCenterTask.isCancelled()) {
+            worldCenterTask.cancel();
+            worldCenterTask = null;
         }
         if (graceTimer != null) {
             graceTimer.cancelTimer();
@@ -399,12 +405,16 @@ public class BattleCommand {
         yBorderTask = Bukkit.getScheduler().runTaskTimer(PaperDjBattlePlugin.getPlugin(), () -> {
             var duration = BattleStateManager.get().incrementDuration();
 
+            //TODO maybe have these magic values also be configurable
             var yMin = DataUtils.lerpWithDelay(duration, delayTime, totalTime, -80, ySpawn - 10);
             var yMax = DataUtils.lerpWithDelay(duration, delayTime, totalTime, 350, ySpawn + 15);
 
             drawHorizontalBorderAndDamage(yMin, yMax, renderDistance, renderSize);
         }, 0, 20);
-
+        var comp = text("World center is at ").append(text(DefaultsManager.<String>getValue(Defaults.BATTLE_LOCATION), WHITE, BOLD));
+        worldCenterTask = Bukkit.getScheduler().runTaskTimer(PaperDjBattlePlugin.getPlugin(), () -> {
+            Bukkit.broadcast(comp);
+        }, 0, TimeUnit.MINUTES.toSeconds(5) * 20);
     }
 
     private static void countdownBroadcastLogic(int secondsLeft, int totalSeconds, String messageSuffix) {
