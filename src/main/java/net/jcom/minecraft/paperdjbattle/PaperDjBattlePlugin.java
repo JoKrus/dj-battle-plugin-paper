@@ -36,6 +36,8 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
         //TODO fix spectator getspectatingteammates query logic
         //TODO reenable gamemode switcher interrupt when done
         //TODO create and enhance readme (server.properties spawn protection 0, allow nether etc)
+        //TODO add all tabtps commands as allowed
+        //TODO make allowed commands configurable
 
 
         // Plugin startup logic
