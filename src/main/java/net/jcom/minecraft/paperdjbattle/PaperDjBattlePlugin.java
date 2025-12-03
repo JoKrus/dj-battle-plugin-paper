@@ -38,6 +38,7 @@ public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
         //TODO create and enhance readme (server.properties spawn protection 0, allow nether etc)
         //TODO add all tabtps commands as allowed
         //TODO make allowed commands configurable
+        //TODO maybe add a command to manually allow a prefix while ingame to be able to emergency fix something
 
 
         // Plugin startup logic
