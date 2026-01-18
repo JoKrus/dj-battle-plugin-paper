@@ -12,7 +12,6 @@ import net.jcom.minecraft.paperdjbattle.database.services.PlayerService;
 import net.jcom.minecraft.paperdjbattle.database.services.TeamService;
 import net.jcom.minecraft.paperdjbattle.listeners.*;
 import org.bukkit.Bukkit;
-import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -22,7 +21,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
-public final class PaperDjBattlePlugin extends JavaPlugin implements Listener {
+public final class PaperDjBattlePlugin extends JavaPlugin {
     private static PaperDjBattlePlugin plugin;
 
     private SqliteDatabase database;

@@ -130,16 +130,16 @@ public class BattleCommand {
 
     private static int runInit(CommandSender sender) {
         List<String> alwaysCmds = List.of(
-                "gamerule sendCommandFeedback true",
+                "gamerule send_command_feedback true",
                 "defaultgamemode adventure",
-                "gamerule doInsomnia false",
-                "gamerule doTraderSpawning false",
-                "gamerule logAdminCommands false",
-                "gamerule commandBlockOutput false",
-                "gamerule doWeatherCycle false",
-                "gamerule doPatrolSpawning false",
-                "gamerule disableRaids true",
-                "gamerule locatorBar false"
+                "gamerule spawn_phantoms false",
+                "gamerule spawn_patrols false",
+                "gamerule spawn_wandering_traders false",
+                "gamerule log_admin_commands false",
+                "gamerule command_block_output false",
+                "gamerule advance_weather false",
+                "gamerule raids false",
+                "gamerule locator_bar false"
         );
 
         List<String> noBattleCmds = List.of(
